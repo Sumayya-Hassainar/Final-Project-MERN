@@ -1,21 +1,31 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const connectDB = require('./config/db');  // ✅ Correct name
-const Routes = require('./routes/indexRoutes'); // ✅ Example route import
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const path = require("path");
+const connectDB = require("./config/db");
+const Routes = require("./routes/indexRoutes");
 
-dotenv.config();
+dotenv.config(); // ✅ MUST be at the very top before using process.env
 
 const app = express();
-app.use(cors());
-app.use(express.json());
 
-// ✅ Connect MongoDB
+// Middleware
+app.use(
+  cors({
+    origin: "http://localhost:5175",
+    credentials: true,
+  })
+);
+
+app.use(express.json());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// DB
 connectDB();
 
-// ✅ Routes
-app.use('/api', Routes); // Example route
+// Routes
+app.use("/api", Routes);
 
-// ✅ Server
+//server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

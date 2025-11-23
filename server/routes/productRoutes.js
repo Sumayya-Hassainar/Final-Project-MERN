@@ -1,4 +1,7 @@
+// routes/productRoutes.js
 const express = require("express");
+const router = express.Router();
+
 const {
   createProduct,
   getProducts,
@@ -6,17 +9,38 @@ const {
   updateProduct,
   deleteProduct,
 } = require("../controllers/productController");
-const { protect, adminOnly, vendorOnly } = require("../middleware/authMiddleware");
 
-const router = express.Router();
+const uploadProductImages = require("../middleware/uploadMiddleware");
+// const { protect, isVendor, isAdmin } = require("../middleware/authMiddleware"); // if you have
 
-router.route("/")
-  .get(getProducts)
-  .post(protect, vendorOnly, createProduct);
+// CREATE product (with multiple images)
+router.post(
+  "/",
+  // protect,
+  // isVendor,
+  uploadProductImages,   // ✅ multer handles images
+  createProduct
+);
 
-router.route("/:id")
-  .get(getProductById)
-  .put(protect, vendorOnly, updateProduct)
-  .delete(protect, vendorOnly, deleteProduct);
+// UPDATE product (optionally with new images)
+router.put(
+  "/:id",
+  // protect,
+  // isVendor,
+  uploadProductImages,   // ✅ override images if sent
+  updateProduct
+);
+
+// READ
+router.get("/", getProducts);
+router.get("/:id", getProductById);
+
+// DELETE
+router.delete(
+  "/:id",
+  // protect,
+  // isVendor,
+  deleteProduct
+);
 
 module.exports = router;

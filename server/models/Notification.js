@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const notificationSchema = new mongoose.Schema({
   recipient: { type: mongoose.Schema.Types.ObjectId, refPath: "recipientModel" },
@@ -10,4 +10,4 @@ const notificationSchema = new mongoose.Schema({
 });
 
 const Notification = mongoose.model("Notification", notificationSchema);
-export default Notification;
+module.exports = Notification;

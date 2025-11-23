@@ -1,11 +1,17 @@
-const express = require('express');
-const { createPayment, getPayments } = require('../controllers/paymentContoller'); // <-- check this path
-const { protect, adminOnly } = require('../middleware/authMiddleware');
+// routes/paymentRoutes.js
+const express = require("express");
+const {
+  createPayment,
+  getPayments,
+} = require("../controllers/paymentContoller");
+const { protect, adminOnly } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-router.route('/')
-  .get(protect, adminOnly, getPayments)
-  .post(protect, createPayment);
+// 🔹 Create fake payment (any logged-in user)
+router.post("/", protect, createPayment);
+
+// 🔹 Get all payments (admin only)
+router.get("/", protect, adminOnly, getPayments);
 
 module.exports = router;

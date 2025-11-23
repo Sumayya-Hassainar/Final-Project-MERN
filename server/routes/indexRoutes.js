@@ -10,6 +10,7 @@ const notificationRoutes = require("./notificationRoutes");
 const activityLogRoutes = require("./activityLogRoutes");
 const customerRoutes=require('./customerRoutes');
 const adminRoutes=require("./adminRoutes");
+const orderStatusRoutes = require("./orderStatusRoutes");
 
 const router = express.Router();
 
@@ -24,5 +25,6 @@ router.use("/notifications", notificationRoutes);
 router.use("/activity-logs", activityLogRoutes);
 router.use("/customer",customerRoutes);
 router.use("/admin",adminRoutes);
+router.use("/order-statuses", orderStatusRoutes);
 
 module.exports = router;
