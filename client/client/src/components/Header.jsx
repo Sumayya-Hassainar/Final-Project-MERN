@@ -1,9 +1,16 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+// src/components/Header.jsx
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { selectTotalItems } from "../redux/slice/CartSlice.jsx";
 
-export default function Header({ role }) {
-  const [query, setQuery] = useState('');
+export default function Header({ role, setRole }) {
+  const [query, setQuery] = useState("");
   const navigate = useNavigate();
+
+  // ✅ get totalItems from Redux
+  const totalItems = useSelector(selectTotalItems);
+  
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -11,80 +18,119 @@ export default function Header({ role }) {
     navigate(`/search?q=${encodeURIComponent(query.trim())}`);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    setRole && setRole("guest");
+    navigate("/login");
+  };
+
   return (
-    <header className="bg-white shadow sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center gap-4">
+    <header className="bg-[#2874F0] text-white sticky top-0 z-40">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <div className="bg-indigo-600 text-white font-bold rounded-md px-3 py-1 text-sm">
-            MV
-          </div>
-          <span className="font-semibold text-lg tracking-tight">
+          <span className="font-semibold text-xl tracking-tight">
             MarketVerse
           </span>
+          <span className="text-xs text-yellow-200">Explore Plus</span>
         </Link>
-
-        {/* Nav links */}
-        <nav className="hidden md:flex items-center gap-4 text-sm text-gray-700 ml-4">
-          <Link to="/" className="hover:text-indigo-600">
-            Home
-          </Link>
-          <Link to="/products" className="hover:text-indigo-600">
-            Products
-          </Link>
-          <Link to="/cart" className="hover:text-indigo-600">
-            Cart
-          </Link>
-          <Link to="/orders" className="hover:text-indigo-600">
-            Orders
-          </Link>
-
-          {/* Vendor & Admin links: only when logged in as them */}
-          {role === 'vendor' && (
-            <Link to="/vendor" className="hover:text-indigo-600">
-              Vendor Dashboard
-            </Link>
-          )}
-          {role === 'admin' && (
-            <Link to="/admin" className="hover:text-indigo-600">
-              Admin Dashboard
-            </Link>
-          )}
-        </nav>
 
         {/* Search */}
         <form
           onSubmit={handleSearch}
-          className="flex-1 flex items-center max-w-md ml-auto"
+          className="flex-1 flex items-center max-w-md ml-4"
         >
           <input
             type="text"
             value={query}
-            placeholder="Search products…"
+            placeholder="Search for products, brands and more"
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full rounded-l-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full rounded-l-sm border-none px-3 py-1.5 text-sm text-black focus:outline-none"
           />
           <button
             type="submit"
-            className="bg-indigo-600 text-white text-sm px-4 py-1.5 rounded-r-md hover:bg-indigo-700"
+            className="bg-white text-[#2874F0] text-sm px-4 py-1.5 rounded-r-sm font-medium"
           >
             Search
           </button>
         </form>
 
-        {/* Auth */}
-        <div className="hidden sm:flex items-center gap-2 text-sm ml-3">
-          <Link
-            to="/login"
-            className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50"
-          >
-            Login
+        {/* Become a Seller */}
+        <button
+          onClick={() => navigate("/vendor/become-seller")}
+          className="hidden md:inline-flex text-sm font-medium px-3 py-1 rounded hover:bg-[#255fcb]"
+        >
+          Become a Seller
+        </button>
+
+        {/* Cart link with badge */}
+        <Link
+          to="/cart"
+          className="hidden md:inline-flex items-center gap-1 text-sm font-medium px-3 py-1 rounded hover:bg-[#255fcb] relative"
+        >
+          <span>🛒</span>
+          <span>Cart</span>
+
+          {totalItems > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full px-1.5 py-0.5">
+              {totalItems}
+            </span>
+          )}
+        </Link>
+
+        {/* Auth area */}
+        {role === "guest" || !role ? (
+          <div className="hidden sm:flex items-center gap-2 text-sm ml-3">
+            <Link
+              to="/login"
+              className="px-3 py-1 bg-white text-[#2874F0] rounded text-sm font-medium"
+            >
+              Login
+            </Link>
+            <Link
+              to="/register"
+              className="px-3 py-1 bg-transparent border border-white rounded text-sm font-medium"
+            >
+              Sign Up
+            </Link>
+          </div>
+        ) : (
+          <div className="hidden sm:flex items-center gap-3 text-sm ml-3">
+            {role === "vendor" && (
+              <Link to="/vendor" className="hover:underline">
+                Vendor Dashboard
+              </Link>
+            )}
+            {role === "admin" && (
+              <Link to="/admin" className="hover:underline">
+                Admin Dashboard
+              </Link>
+            )}
+            <button
+              onClick={handleLogout}
+              className="px-3 py-1 bg-white text-[#2874F0] rounded text-sm font-medium"
+            >
+              Logout
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Bottom nav bar */}
+      <div className="hidden md:block bg-[#2463d0]">
+        <div className="max-w-7xl mx-auto px-4 h-10 flex items-center gap-6 text-sm">
+          <Link to="/products" className="cursor-pointer hover:underline">
+            Products
           </Link>
-          <Link
-            to="/register"
-            className="px-3 py-1 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-          >
-            Register
+          <Link to="/orders" className="cursor-pointer hover:underline">
+            Orders
+          </Link>
+          <Link to="/wishlist" className="cursor-pointer hover:underline">
+            Wishlist
+          </Link>
+          <Link to="/account" className="cursor-pointer hover:underline">
+            My Account
           </Link>
         </div>
       </div>

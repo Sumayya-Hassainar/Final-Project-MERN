@@ -1,38 +1,39 @@
+// models/Order.js
 const mongoose = require("mongoose");
 
-const orderSchema = new mongoose.Schema({
-  customer: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  vendor: { type: mongoose.Schema.Types.ObjectId, ref: "Vendor", required: true },
-  products: [
-    {
-      product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
-      quantity: Number,
-      price: Number,
+const orderSchema = new mongoose.Schema(
+  {
+    customer: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    products: [
+      {
+        product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
+        quantity: { type: Number, required: true },
+        price: { type: Number, required: true },
+      },
+    ],
+    shippingAddress: {
+      fullName: String,
+      phone: String,
+      street: String,
+      city: String,
+      state: String,
+      country: String,
+      pincode: String,
     },
-  ],
-  totalAmount: Number,
-  paymentStatus: { 
-    type: String, 
-    enum: ["Pending", "Paid", "Refunded"], 
-    default: "Pending" 
+    paymentMethod: {
+      type: String,
+      enum: ["cod", "card", "upi", "stripe"],
+      default: "cod",
+    },
+    totalAmount: { type: Number, required: true },
+    orderStatus: {
+      type: String,
+      enum: ["Pending", "Shipped", "Delivered", "Cancelled"],
+      default: "Pending",
+    },
+    trackingStatus: { type: String, default: "" },
   },
-  orderStatus: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "OrderStatus", 
-    required: true 
-  },
-  shippingAddress: {
-    street: String,
-    city: String,
-    state: String,
-    pincode: String,
-    country: String,
-  },
-  trackingId: String,
-  deliveryDate: Date,
-  createdAt: { type: Date, default: Date.now },
-});
+  { timestamps: true }
+);
 
-const Order = mongoose.model("Order", orderSchema);
-
-module.exports = Order;
+module.exports = mongoose.model("Order", orderSchema);

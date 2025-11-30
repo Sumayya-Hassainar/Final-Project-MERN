@@ -6,40 +6,45 @@ const {
   createProduct,
   getProducts,
   getProductById,
+  getMyProducts,
   updateProduct,
   deleteProduct,
 } = require("../controllers/productController");
 
 const uploadProductImages = require("../middleware/uploadMiddleware");
-// const { protect, isVendor, isAdmin } = require("../middleware/authMiddleware"); // if you have
+const { protect, vendorOnly } = require("../middleware/authMiddleware");
 
-// CREATE product (with multiple images)
+// ---------- PUBLIC CUSTOMER ROUTES ----------
+router.get("/", getProducts);        // GET /api/products
+router.get("/:id", getProductById);  // GET /api/products/:id
+
+// ---------- VENDOR-ONLY ROUTES ----------
+// GET /api/products/vendor/my-products?category=...
+router.get("/vendor/my-products", protect, vendorOnly, getMyProducts);
+
+// CREATE product (with multiple images) – only vendor
 router.post(
   "/",
-  // protect,
-  // isVendor,
-  uploadProductImages,   // ✅ multer handles images
+  protect,
+  vendorOnly,
+  uploadProductImages,
   createProduct
 );
 
-// UPDATE product (optionally with new images)
+// UPDATE product
 router.put(
   "/:id",
-  // protect,
-  // isVendor,
-  uploadProductImages,   // ✅ override images if sent
+  protect,
+  vendorOnly,
+  uploadProductImages,
   updateProduct
 );
 
-// READ
-router.get("/", getProducts);
-router.get("/:id", getProductById);
-
-// DELETE
+// DELETE product
 router.delete(
   "/:id",
-  // protect,
-  // isVendor,
+  protect,
+  vendorOnly,
   deleteProduct
 );
 

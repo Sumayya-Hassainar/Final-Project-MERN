@@ -1,14 +1,33 @@
+// routes/activityLogRoutes.js
 const express = require("express");
-const { protect, adminOnly, vendorOnly } = require("../middleware/authMiddleware");
-const { createOrder } = require("../controllers/orderController");
-const { updateOrderStatus } = require("../controllers/orderStatusController");
-
 const router = express.Router();
 
-// customer creates order
-router.post("/", protect, createOrder);
+const {
+  protect,
+  adminOnly,
+} = require("../middleware/authMiddleware");
 
-// admin or vendor updates order status
-router.put("/:id/status", protect, updateOrderStatus);
+const {
+  getActivityLogs,
+  getActivityLogById,
+  createActivityLog,
+  updateActivityLog,
+  deleteActivityLog,
+} = require("../controllers/activityLogController");
+
+// GET all logs - admin only
+router.get("/", protect, adminOnly, getActivityLogs);
+
+// GET single log - admin only
+router.get("/:id", protect, adminOnly, getActivityLogById);
+
+// CREATE log - admin only (you can relax this if you want)
+router.post("/", protect, adminOnly, createActivityLog);
+
+// UPDATE log - admin only
+router.put("/:id", protect, adminOnly, updateActivityLog);
+
+// DELETE log - admin only
+router.delete("/:id", protect, adminOnly, deleteActivityLog);
 
 module.exports = router;

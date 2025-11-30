@@ -1,27 +1,26 @@
 // routes/orderStatusRoutes.js
 const express = require("express");
-const {
-  createOrderStatus,
-  getOrderStatuses,
-  getOrderStatusById,
-  updateOrderStatus,
-  deleteOrderStatus,
-} = require("../controllers/orderStatusController");
-const { protect, adminOnly } = require("../middleware/authMiddleware");
-
 const router = express.Router();
 
-// Admin creates and views all statuses
-router
-  .route("/")
-  .post(protect, adminOnly, createOrderStatus)
-  .get(protect, adminOnly, getOrderStatuses);
+const {
+  getAllOrderStatuses,
+  createOrderStatus,
+  updateStatusMaster,
+  deleteOrderStatus,
+} = require("../controllers/orderStatusController");
 
-// Admin can view, update, delete single status
-router
-  .route("/:id")
-  .get(protect, adminOnly, getOrderStatusById)
-  .put(protect, adminOnly, updateOrderStatus)
-  .delete(protect, adminOnly, deleteOrderStatus);
+const { protect, adminOnly } = require("../middleware/authMiddleware");
+
+// GET /api/order-status
+router.get("/", protect, adminOnly, getAllOrderStatuses);
+
+// POST /api/order-status
+router.post("/", protect, adminOnly, createOrderStatus);
+
+// PUT /api/order-status/:id
+router.put("/:id", protect, adminOnly, updateStatusMaster);
+
+// DELETE /api/order-status/:id
+router.delete("/:id", protect, adminOnly, deleteOrderStatus);
 
 module.exports = router;

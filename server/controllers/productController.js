@@ -5,14 +5,15 @@ const Product = require("../models/Product");
 const buildImageUrls = (req, files) => {
   if (!files || files.length === 0) return [];
 
-  return files.map((file) => {
-    // if for some reason file or filename is missing, skip it
-    if (!file || !file.filename) return null;
-    return `${req.protocol}://${req.get("host")}/uploads/products/${file.filename}`;
-  }).filter(Boolean); // remove null
+  return files
+    .map((file) => {
+      if (!file || !file.filename) return null;
+      return `${req.protocol}://${req.get("host")}/uploads/products/${file.filename}`;
+    })
+    .filter(Boolean); // remove null
 };
 
-// Create Product
+// ---------- CREATE PRODUCT (vendor only) ----------
 const createProduct = async (req, res) => {
   try {
     console.log("FILES RECEIVED ON CREATE:", req.files);
@@ -27,18 +28,10 @@ const createProduct = async (req, res) => {
       isActive,
     } = req.body;
 
-    // vendor from auth token or from body (fallback)
-    const vendor = req.user && req.user._id ? req.user._id : req.body.vendor;
+    // ✅ vendor from auth token (protect + isVendor guarantees it)
+    const vendor = req.user._id;
 
-    // build image URLs from uploaded files
     const images = buildImageUrls(req, req.files);
-
-    // OPTIONAL: enforce minimum 4 images
-    // if (images.length < 4) {
-    //   return res
-    //     .status(400)
-    //     .json({ message: "At least 4 product images are required" });
-    // }
 
     const product = await Product.create({
       vendor,
@@ -61,10 +54,12 @@ const createProduct = async (req, res) => {
   }
 };
 
-// Get All Products
+// ---------- GET ALL PRODUCTS (public, for customers) ----------
 const getProducts = async (req, res) => {
   try {
-    const products = await Product.find().populate("category vendor");
+    const products = await Product.find()
+      .populate("category")
+      .populate("vendor");
     res.status(200).json(products);
   } catch (error) {
     console.error("Get products error:", error);
@@ -72,12 +67,12 @@ const getProducts = async (req, res) => {
   }
 };
 
-// Get Product by ID
+// ---------- GET PRODUCT BY ID (public) ----------
 const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id).populate(
-      "category vendor"
-    );
+    const product = await Product.findById(req.params.id)
+      .populate("category")
+      .populate("vendor");
     if (!product) return res.status(404).json({ message: "Product not found" });
 
     res.status(200).json(product);
@@ -86,8 +81,30 @@ const getProductById = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+// ✅ NEW: Get products for logged-in vendor, optionally filtered by category
+const getMyProducts = async (req, res) => {
+  try {
+    const vendorId = req.user._id; // comes from protect middleware
+    const { category } = req.query; // optional ?category=...
 
-// Update Product
+    const filter = { vendor: vendorId }; // only this vendor
+
+    if (category) {
+      filter.category = category; // category is ObjectId of Category
+    }
+
+    const products = await Product.find(filter)
+      .populate("category", "name") // show category name
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(products);
+  } catch (error) {
+    console.error("Get my products error:", error);
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// ---------- UPDATE PRODUCT (vendor only, own product) ----------
 const updateProduct = async (req, res) => {
   try {
     console.log("FILES RECEIVED ON UPDATE:", req.files);
@@ -102,6 +119,16 @@ const updateProduct = async (req, res) => {
       isActive,
     } = req.body;
 
+    // First find the product and check ownership
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    if (String(product.vendor) !== String(req.user._id)) {
+      return res
+        .status(403)
+        .json({ message: "You can only edit your own products" });
+    }
+
     const updateData = {
       name,
       description,
@@ -113,10 +140,8 @@ const updateProduct = async (req, res) => {
       updatedAt: new Date(),
     };
 
-    // if new images uploaded, override images array
     if (req.files && req.files.length > 0) {
-      const newImages = buildImageUrls(req, req.files);
-      updateData.images = newImages;
+      updateData.images = buildImageUrls(req, req.files);
     }
 
     const updated = await Product.findByIdAndUpdate(
@@ -125,10 +150,6 @@ const updateProduct = async (req, res) => {
       { new: true }
     );
 
-    if (!updated) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
     res.status(200).json(updated);
   } catch (error) {
     console.error("Update product error:", error);
@@ -136,14 +157,19 @@ const updateProduct = async (req, res) => {
   }
 };
 
-// Delete Product
+// ---------- DELETE PRODUCT (vendor only, own product) ----------
 const deleteProduct = async (req, res) => {
   try {
-    const deleted = await Product.findByIdAndDelete(req.params.id);
-    if (!deleted) {
-      return res.status(404).json({ message: "Product not found" });
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    if (String(product.vendor) !== String(req.user._id)) {
+      return res
+        .status(403)
+        .json({ message: "You can only delete your own products" });
     }
 
+    await product.deleteOne();
     res.status(200).json({ message: "Product deleted" });
   } catch (error) {
     console.error("Delete product error:", error);
@@ -155,6 +181,7 @@ module.exports = {
   createProduct,
   getProducts,
   getProductById,
+  getMyProducts,
   updateProduct,
   deleteProduct,
 };

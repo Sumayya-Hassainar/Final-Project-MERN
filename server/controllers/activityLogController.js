@@ -1,58 +1,95 @@
-// controllers/orderStatusController.js
-const Order = require("../models/Order");
-const OrderStatus = require("../models/OrderStatus");
+// controllers/activityLogController.js
+const asyncHandler = require("express-async-handler");
 const ActivityLog = require("../models/ActivityLog");
 
-// Admin or Vendor updates order status
-const updateOrderStatus = async (req, res) => {
-  try {
-    const { statusId } = req.body; // send OrderStatus _id in body
-    const orderId = req.params.id;
+/**
+ * GET /api/activity-logs
+ * Admin: get all activity logs
+ */
+const getActivityLogs = asyncHandler(async (req, res) => {
+  const logs = await ActivityLog.find()
+    .populate("user", "name email role")
+    .sort({ createdAt: -1 });
 
-    const statusDoc = await OrderStatus.findById(statusId);
-    if (!statusDoc) {
-      return res.status(404).json({ message: "Order status not found" });
-    }
+  res.json(logs);
+});
 
-    const order = await Order.findByIdAndUpdate(
-      orderId,
-      { orderStatus: statusId },
-      { new: true }
-    );
+/**
+ * GET /api/activity-logs/:id
+ * Admin: get single activity log by id
+ */
+const getActivityLogById = asyncHandler(async (req, res) => {
+  const log = await ActivityLog.findById(req.params.id).populate(
+    "user",
+    "name email role"
+  );
 
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
-    }
-
-    // 🔹 Who is updating? admin or vendor (from auth middleware)
-    const actorId = req.user._id;
-    const actorRole =
-      req.user.role === "admin"
-        ? "Admin"
-        : req.user.role === "vendor"
-        ? "Vendor"
-        : "User";
-
-    // 🔹 Create ActivityLog
-    await ActivityLog.create({
-      actor: actorId,
-      actorModel: actorRole, // must be "User" | "Vendor" | "Admin"
-      action: "UPDATE_ORDER_STATUS",
-      target: `Order:${order._id}`,
-      details: {
-        newStatusId: statusId,
-        newStatusName: statusDoc.name,
-      },
-    });
-
-    res.status(200).json({
-      message: "Order status updated successfully",
-      order,
-    });
-  } catch (error) {
-    console.error("Update order status error:", error);
-    res.status(400).json({ message: error.message });
+  if (!log) {
+    return res.status(404).json({ message: "Activity log not found" });
   }
-};
 
-module.exports = { updateOrderStatus };
+  res.json(log);
+});
+
+/**
+ * POST /api/activity-logs
+ * Admin: create a new activity log (or you can allow others too)
+ */
+const createActivityLog = asyncHandler(async (req, res) => {
+  const { user, action, description, meta } = req.body;
+
+  const log = await ActivityLog.create({
+    user,
+    action,
+    description,
+    meta,
+  });
+
+  res.status(201).json(log);
+});
+
+/**
+ * PUT /api/activity-logs/:id
+ * Admin: update an existing activity log
+ */
+const updateActivityLog = asyncHandler(async (req, res) => {
+  const { action, description, meta } = req.body;
+
+  const log = await ActivityLog.findById(req.params.id);
+
+  if (!log) {
+    return res.status(404).json({ message: "Activity log not found" });
+  }
+
+  if (action !== undefined) log.action = action;
+  if (description !== undefined) log.description = description;
+  if (meta !== undefined) log.meta = meta;
+
+  const updated = await log.save();
+
+  res.json(updated);
+});
+
+/**
+ * DELETE /api/activity-logs/:id
+ * Admin: delete a log
+ */
+const deleteActivityLog = asyncHandler(async (req, res) => {
+  const log = await ActivityLog.findById(req.params.id);
+
+  if (!log) {
+    return res.status(404).json({ message: "Activity log not found" });
+  }
+
+  await log.deleteOne();
+
+  res.json({ message: "Activity log removed" });
+});
+
+module.exports = {
+  getActivityLogs,
+  getActivityLogById,
+  createActivityLog,
+  updateActivityLog,
+  deleteActivityLog,
+};

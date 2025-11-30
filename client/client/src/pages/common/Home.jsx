@@ -1,6 +1,6 @@
 import React from 'react';
-import Carousel from '../components/Carousel';
-import ProductCard from '../components/ProductCard';
+import { useNavigate } from 'react-router-dom';
+import Carousel from '../../components/Carousel';
 
 // dummy products just for UI
 const sampleProducts = [
@@ -10,7 +10,7 @@ const sampleProducts = [
     price: 2499,
     vendor: 'TechWorld',
     image:
-      'https://images.pexels.com/photos/3394664/pexels-photo-3394664.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSoRU3dDPVoRzBeAqiDJPegj2htjIjDzSN3_A&s',
   },
   {
     id: 2,
@@ -18,7 +18,7 @@ const sampleProducts = [
     price: 18999,
     vendor: 'MobileHub',
     image:
-      'https://images.pexels.com/photos/404280/pexels-photo-404280.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpy0J2pF2U1b2GQZhHtpleJjkbs6PqWXUQJA&s',
   },
   {
     id: 3,
@@ -26,7 +26,7 @@ const sampleProducts = [
     price: 1499,
     vendor: 'Urban Style',
     image:
-      'https://images.pexels.com/photos/2529148/pexels-photo-2529148.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYEo_IJsVemJDeHHV7--VANfdhbVoTuScFag&s',
   },
   {
     id: 4,
@@ -34,11 +34,18 @@ const sampleProducts = [
     price: 2199,
     vendor: 'HomeCraft',
     image:
-      'https://images.pexels.com/photos/963486/pexels-photo-963486.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQwKN2xt3ZK1LblLDf1kMevZm2nhLfw9eZd8Q&s',
   },
 ];
 
 export default function Home() {
+  const navigate = useNavigate();
+
+  const handleAddToCart = () => {
+    // Redirect to Register page if user is not logged in
+    navigate('/register');
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
       {/* Hero carousel */}
@@ -95,7 +102,25 @@ export default function Home() {
         </div>
         <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
           {sampleProducts.map((p) => (
-            <ProductCard key={p.id} product={p} />
+            <div
+              key={p.id}
+              className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 flex flex-col"
+            >
+              <img
+                src={p.image}
+                alt={p.name}
+                className="w-full h-40 object-cover rounded mb-2"
+              />
+              <h3 className="text-sm font-semibold mb-1">{p.name}</h3>
+              <p className="text-xs text-gray-500 mb-1">by {p.vendor}</p>
+              <span className="text-sm font-bold">₹{p.price}</span>
+              <button
+                onClick={handleAddToCart}
+                className="mt-2 bg-indigo-600 text-white text-xs py-1 rounded hover:bg-indigo-700"
+              >
+                Add to Cart
+              </button>
+            </div>
           ))}
         </div>
       </section>

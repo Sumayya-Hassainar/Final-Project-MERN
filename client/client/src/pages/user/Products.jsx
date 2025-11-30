@@ -1,7 +1,7 @@
 // src/pages/Products.jsx  OR  ProductsPage.jsx
 import React, { useEffect, useState } from "react";
-import { fetchProducts } from "../api/api";   // ✅ use fetchProducts
-import ProductCard from "../components/ProductCard";
+import { fetchProducts } from "../../api/api";   // ✅ use fetchProducts
+import ProductCard from "../../components/ProductCard";
 
 export default function Products() {
   const [products, setProducts] = useState([]);

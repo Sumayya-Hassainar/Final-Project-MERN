@@ -1,8 +1,8 @@
 // src/pages/SearchResults.jsx
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { fetchProducts } from "../api/api";
-import ProductCard from "../components/ProductCard";
+import { fetchProducts } from "../../api/api";
+import ProductCard from "../../components/ProductCard";
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);

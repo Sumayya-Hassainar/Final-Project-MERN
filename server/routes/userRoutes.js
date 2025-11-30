@@ -1,4 +1,7 @@
+// routes/authRoutes.js
 const express = require("express");
+const router = express.Router();
+
 const {
   registerUser,
   loginUser,
@@ -6,17 +9,17 @@ const {
   logoutUser,
   checkRole,
 } = require("../controllers/userController");
+
 const { protect } = require("../middleware/authMiddleware");
 
-const router = express.Router();
+// 🔹 Public auth routes
+router.post("/register", registerUser); // customer/vendor register
+router.post("/login", loginUser);       // customer/vendor/admin login
 
-// Public routes
-router.post("/register", registerUser);
-router.post("/login", loginUser);
+// 🔹 Protected routes (require valid JWT)
+router.get("/profile", protect, getProfile);   // get logged-in user profile
+router.post("/logout", protect, logoutUser);   // simple logout response
+router.get("/check-role", protect, checkRole); // returns { role }
 
-// Protected routes
-router.get("/profile", protect, getProfile);
-router.get("/check-role", protect, checkRole);
-router.post("/logout", protect, logoutUser);
-
+// export
 module.exports = router;

@@ -1,35 +1,50 @@
+// models/User.js
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-const userSchema = new mongoose.Schema({
-  name: { type: String, required: true, trim: true },
-  email: { type: String, required: true, unique: true, lowercase: true },
-  password: { type: String, required: true },
-  role: {
-    type: String,
-    enum: ["customer", "vendor", "admin"],
-    default: "customer"
-  },
-  phone: String,
-  address: {
-    street: String,
-    city: String,
-    state: String,
-    country: String,
-    pincode: String,
-  },
-  isActive: { type: Boolean, default: true },
-  twoFactorEnabled: { type: Boolean, default: false },
-  createdAt: { type: Date, default: Date.now },
-});
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Name is required"],
+    },
+    email: {
+      type: String,
+      required: [true, "Email is required"],
+      unique: true,
+      lowercase: true,
+    },
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+      minlength: 6,
+    },
+    role: {
+      type: String,
+      enum: ["customer", "vendor", "admin"],
+      default: "customer",
+    },
 
-// Encrypt password before saving
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
+    // ✅ NEW: vendor approval status
+    isVendorApproved: {
+      type: Boolean,
+      default: false, // new vendors are pending by default
+    },
 
-const User = mongoose.model("User", userSchema);
-module.exports = User;
+    // (optional) vendor extra fields
+    shopName: {
+      type: String,
+    },
+  },
+  { timestamps: true }
+);
+
+// (Optional) pre-save hashing if you want
+// userSchema.pre("save", async function (next) {
+//   if (!this.isModified("password")) return next();
+//   const salt = await bcrypt.genSalt(10);
+//   this.password = await bcrypt.hash(this.password, salt);
+//   next();
+// });
+
+module.exports = mongoose.model("User", userSchema);
